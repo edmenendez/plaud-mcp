@@ -5,14 +5,19 @@ Reads MCP_TRANSPORT env var (default: "stdio") and starts the server
 on the appropriate transport.
 
   stdio        — MCP over stdin/stdout (Claude Code, Claude Desktop)
-  http         — MCP over streamable-http on 0.0.0.0:8080 (Kubernetes)
+  http         — MCP over streamable-http. Listens on FASTMCP_HOST:FASTMCP_PORT
+                 (default 127.0.0.1:8080) and needs PLAUD_MCP_HTTP_TOKEN_FILE,
+                 or PLAUD_MCP_HTTP_NO_AUTH=true to run without a client token.
 """
 import asyncio
 import logging
 import os
 
+from starlette.middleware import Middleware as ASGIMiddleware
+
 from .auth import TokenManager
 from .config import settings
+from .http_security import HttpAccessMiddleware, http_settings, is_loopback
 from .server import mcp
 
 
@@ -46,9 +51,20 @@ def main() -> None:
 
     transport = os.environ.get("MCP_TRANSPORT", "stdio").lower().strip()
     if transport == "http":
-        # HTTP mode is intended for container/Kubernetes deployments, so
-        # binding all interfaces is required for the service to be reachable.
-        mcp.run(transport="streamable-http", host="0.0.0.0", port=8080)  # nosec B104
+        host, port, token = http_settings()
+        mcp.run(
+            transport="streamable-http",
+            host=host,
+            port=port,
+            # No tool keeps per-session state, and stateless mode lets clients
+            # carry on after a server restart.
+            stateless_http=True,
+            middleware=[
+                ASGIMiddleware(
+                    HttpAccessMiddleware, token=token, port=port, local_only=is_loopback(host)
+                )
+            ],
+        )
     else:
         mcp.run(transport="stdio")
 

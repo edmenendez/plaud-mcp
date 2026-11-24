@@ -21,6 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Default transport: stdio (for Claude Code / Claude Desktop).
 # Override at runtime with: -e MCP_TRANSPORT=http
 ENV MCP_TRANSPORT=stdio
+# Inside a container the server must listen on all interfaces to be reachable.
+ENV FASTMCP_HOST=0.0.0.0
 
 # Writable directory for the persisted token (used when PLAUD_AUTO_REFRESH=true
 # or when a mounted PLAUD_TOKEN_FILE points here). Owned by the non-root user

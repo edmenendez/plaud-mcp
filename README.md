@@ -42,6 +42,8 @@ Use `stdio` if you want the simplest local setup and your MCP client can launch 
 
 Use HTTP if you want a long-running local service on `http://127.0.0.1:8080/mcp`, or if you plan to run the server in a container or Kubernetes.
 
+HTTP mode requires a client token (`PLAUD_MCP_HTTP_TOKEN_FILE`) unless you set `PLAUD_MCP_HTTP_NO_AUTH=true`; the included compose and Kubernetes files set the latter. See [HTTP access control](docs/OPERATIONS.md#http-access-control).
+
 ## Quick start
 
 ### 1. Clone and configure auth

@@ -44,6 +44,11 @@ spec:
           env:
             - name: MCP_TRANSPORT
               value: "http"
+            # No client token: access is limited by the NetworkPolicy below.
+            # To require one instead, mount a token file and set
+            # PLAUD_MCP_HTTP_TOKEN_FILE (see docs/OPERATIONS.md).
+            - name: PLAUD_MCP_HTTP_NO_AUTH
+              value: "true"
           # Credentials injected from K8s Secret - never baked into image (T-03-01)
           envFrom:
             - secretRef:

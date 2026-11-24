@@ -110,6 +110,23 @@ bash scripts/container-runtime.sh docker down
 bash scripts/container-runtime.sh podman down
 ```
 
+## HTTP access control
+
+In HTTP mode the server listens on `FASTMCP_HOST:FASTMCP_PORT` (default `127.0.0.1:8080`) and refuses to start unless you choose one of:
+
+- `PLAUD_MCP_HTTP_TOKEN_FILE`: a file holding one token of 32 or more characters (keep it `chmod 600`). Clients must send `Authorization: Bearer <token>`. The file is read at start, so restart the server after changing it.
+- `PLAUD_MCP_HTTP_NO_AUTH=true`: no client token. Only for networks you control, such as the Kubernetes manifests (with their NetworkPolicy) or the local compose setup.
+
+Requests with an `Origin` header (web browsers) are always refused. When the server listens on a loopback address it also refuses any `Host` other than `127.0.0.1:<port>` or `localhost:<port>`. Together these stop a web page from reaching the server through DNS rebinding. `/health` needs no token.
+
+To share one server among many local MCP clients instead of one stdio process each:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))" > ~/.plaud-mcp/http-token && chmod 600 ~/.plaud-mcp/http-token
+MCP_TRANSPORT=http FASTMCP_PORT=8781 PLAUD_MCP_HTTP_TOKEN_FILE=~/.plaud-mcp/http-token python -m plaud_mcp
+claude mcp add --transport http --scope user plaud http://127.0.0.1:8781/mcp --header "Authorization: Bearer $(cat ~/.plaud-mcp/http-token)"
+```
+
 ## Local verification
 
 The macOS runtime verification entrypoint is:

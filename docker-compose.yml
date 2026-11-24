@@ -21,6 +21,9 @@ services:
 
       - PLAUD_DEVICE_ID=${PLAUD_DEVICE_ID}
       - MCP_TRANSPORT=http
+      # The client token is off by default here. To require one, mount a token
+      # file and set PLAUD_MCP_HTTP_TOKEN_FILE instead (see docs/OPERATIONS.md).
+      - PLAUD_MCP_HTTP_NO_AUTH=${PLAUD_MCP_HTTP_NO_AUTH:-true}
     volumes:
       - plaud-data:/app/data
 
